@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Invoices - ServiceForge Pro{% endblock %}
+
+{% block content %}
+    <div class="mb-8">
+        <h2 class="text-3xl font-bold text-gray-800">Invoices</h2>
+        <p class="text-gray-500 mt-1">List of generated invoices.</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-600 text-sm uppercase tracking-wider">
+                        <th class="px-6 py-4 font-semibold">Job ID</th>
+                        <th class="px-6 py-4 font-semibold">Client</th>
+                        <th class="px-6 py-4 font-semibold">Date</th>
+                        <th class="px-6 py-4 font-semibold text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700 divide-y divide-gray-100">
+                    {% for jobcard in invoices %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 font-medium text-gray-900">{{ jobcard.jobcard_id }}</td>
+                        <td class="px-6 py-4">{{ jobcard.client.name }}</td>
+                        <td class="px-6 py-4">{{ jobcard.created_at|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4 text-right">
+                            {% if jobcard.invoice_pdf %}
+                                <a href="{{ jobcard.invoice_pdf.url }}" target="_blank" class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold hover:bg-indigo-200 transition-colors">
+                                    <i class="fas fa-download mr-1"></i> Download PDF
+                                </a>
+                            {% else %}
+                                <span class="text-gray-400 text-xs">No PDF</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-gray-400">
+                            <p>No invoices found.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

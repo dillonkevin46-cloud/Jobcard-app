@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Fill Jobcard - ServiceForge Pro{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.form.io/formiojs/formio.full.min.css">
+<script src="https://cdn.form.io/formiojs/formio.full.min.js"></script>
+<style>
+    #form-canvas {
+        background-color: white;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        width: 210mm;
+        min-height: 297mm;
+        padding: 20mm;
+        margin: 0 auto;
+        position: relative;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center max-w-7xl mx-auto">
+    <div>
+        <h2 class="text-3xl font-bold text-gray-800">Jobcard: {{ template.name }}</h2>
+        <p class="text-gray-500 mt-1">Client: {{ client.name }}</p>
+    </div>
+    <div class="flex space-x-3">
+        <a href="{% url 'jobcard_create' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+            Cancel
+        </a>
+        <button id="submitJobcardBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-sm transition-colors duration-200">
+            Submit Jobcard
+        </button>
+    </div>
+</div>
+
+<div class="flex justify-center pb-12">
+    <div id="form-canvas">
+        <div id="formio"></div>
+    </div>
+</div>
+
+<form id="submissionForm" method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="submission_data" id="submission_data">
+</form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const schema = {{ schema_json|safe }};
+        let formInstance = null;
+
+        Formio.createForm(document.getElementById('formio'), schema).then(function(form) {
+            formInstance = form;
+            form.nosubmit = true; // Disable internal submit logic just in case
+        });
+
+        document.getElementById('submitJobcardBtn').addEventListener('click', function() {
+            if (formInstance) {
+                formInstance.submit().then(function(submission) {
+                    // Success
+                    document.getElementById('submission_data').value = JSON.stringify(submission.data);
+                    document.getElementById('submissionForm').submit();
+                }).catch(function(err) {
+                    console.error("Submission error", err);
+                    alert("Please correct the errors on the form before submitting.");
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

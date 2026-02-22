@@ -4,6 +4,8 @@ from . import views
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('jobcards/', views.jobcard_list, name='jobcard_list'),
+    path('jobcards/create/', views.jobcard_create, name='jobcard_create'),
+    path('jobcards/fill/<int:template_id>/<int:client_id>/', views.jobcard_fill, name='jobcard_fill'),
     path('invoices/', views.invoice_list, name='invoice_list'),
     path('builder/', views.template_builder, name='template_builder'),
     path('templates/', views.template_list, name='template_list'),

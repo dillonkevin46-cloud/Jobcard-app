@@ -8,13 +8,12 @@
     <style>
         #builder {
             background-color: white;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
             max-width: 210mm;
             min-height: 297mm;
             margin: 0 auto;
-            padding: 20mm;
+            padding: 20px;
             position: relative;
-            overflow: hidden;
         }
 
         .watermark {
@@ -46,7 +45,7 @@
                 <p class="text-gray-500 mt-1">Design your A4 jobcard layout using custom blocks.</p>
             </div>
             <div>
-                <a href="{% url 'dashboard' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg mr-3 transition-colors duration-200">
+                <a href="{% url 'template_list' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg mr-3 transition-colors duration-200">
                     Cancel
                 </a>
                 <button type="button" id="saveTemplate" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-sm transition-colors duration-200">
@@ -55,13 +54,13 @@
             </div>
         </div>
 
-        <form method="POST" id="templateForm" class="space-y-6" action="{% url 'template_builder' %}">
+        <form method="POST" id="templateForm" class="space-y-6">
             {% csrf_token %}
             <input type="hidden" name="layout_schema" id="layout_schema">
 
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
                 <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Template Name</label>
-                <input type="text" name="name" id="name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. Standard Service Jobcard">
+                <input type="text" name="name" id="name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. Standard Service Jobcard" value="{{ template.name|default:'' }}">
             </div>
 
             <!-- The A4 Builder Area -->
@@ -75,224 +74,52 @@
 
     <script>
         window.onload = function() {
-            Formio.builder(document.getElementById('builder'), {}, {
+            const existingSchema = {{ schema_json|safe|default:"{}" }};
+
+            Formio.builder(document.getElementById('builder'), existingSchema, {
                 builder: {
-                    basic: false,
-                    advanced: false,
-                    data: false,
-                    premium: false,
-                    layout: false,
-                    custom: false,
-                    resource: false,
-                    customBasic: {
+                    basic: false, advanced: false, data: false, premium: false, layout: false,
+                    jobcardBlocks: {
                         title: 'Jobcard Blocks',
-                        default: true,
                         weight: 0,
                         components: {
-                            headerlogo: {
-                                title: 'Header Logo',
-                                key: 'headerLogo',
-                                icon: 'image',
-                                schema: {
-                                    label: 'Header Logo',
-                                    tag: 'img',
-                                    attrs: [
-                                        { attr: 'src', value: 'https://via.placeholder.com/150x50?text=Your+Logo' },
-                                        { attr: 'alt', value: 'Company Logo' },
-                                        { attr: 'style', value: 'max-width: 200px;' }
-                                    ],
-                                    content: '',
-                                    type: 'htmlelement',
-                                    input: false,
-                                    persistent: false
-                                }
+                            logo: {
+                                title: 'Header Logo', key: 'logo', icon: 'image',
+                                schema: { type: 'htmlelement', tag: 'img', attrs: [{attr: 'src', value: 'https://via.placeholder.com/200x50?text=Company+Logo'}], className: 'mb-4' }
                             },
-                            companyaddress: {
-                                title: 'Company Address',
-                                key: 'companyAddress',
-                                icon: 'building',
-                                schema: {
-                                    label: 'Company Address',
-                                    tag: 'div',
-                                    content: '<strong>Your Company Name</strong><br>123 Service Street<br>Tech City, TC 90210<br>Phone: (555) 123-4567',
-                                    type: 'htmlelement',
-                                    input: false,
-                                    persistent: false
-                                }
+                            address: {
+                                title: 'Address Block', key: 'address', icon: 'home',
+                                schema: { label: 'Company Address', type: 'textarea', key: 'addressBlock', defaultValue: '123 Service Road\nCity, Country\nPhone: 555-0100', rows: 3 }
                             },
-                            jobcardnumber: {
-                                title: 'Jobcard Number',
-                                key: 'jobcardNumber',
-                                icon: 'hashtag',
-                                schema: {
-                                    label: 'Jobcard ID',
-                                    key: 'jobcard_id',
-                                    type: 'textfield',
-                                    input: true,
-                                    placeholder: 'JC-YYYY-XXXX',
-                                    disabled: true,
-                                    tableView: true
-                                }
+                            jobcardId: {
+                                title: 'Jobcard Number', key: 'jobcardId', icon: 'hashtag',
+                                schema: { label: 'Jobcard ID', type: 'textfield', key: 'jobcard_id', disabled: true, placeholder: 'Auto-generated' }
                             },
-                            times: {
-                                title: 'Start / End Time',
-                                key: 'times',
-                                icon: 'clock',
-                                schema: {
-                                    label: 'Time Tracking',
-                                    columns: [
-                                        {
-                                            components: [
-                                                {
-                                                    label: 'Start Time',
-                                                    key: 'startTime',
-                                                    type: 'datetime',
-                                                    input: true,
-                                                    format: 'yyyy-MM-dd HH:mm',
-                                                    enableDate: true,
-                                                    enableTime: true,
-                                                    tableView: true
-                                                }
-                                            ],
-                                            width: 6,
-                                            offset: 0,
-                                            push: 0,
-                                            pull: 0
-                                        },
-                                        {
-                                            components: [
-                                                {
-                                                    label: 'End Time',
-                                                    key: 'endTime',
-                                                    type: 'datetime',
-                                                    input: true,
-                                                    format: 'yyyy-MM-dd HH:mm',
-                                                    enableDate: true,
-                                                    enableTime: true,
-                                                    tableView: true
-                                                }
-                                            ],
-                                            width: 6,
-                                            offset: 0,
-                                            push: 0,
-                                            pull: 0
-                                        }
-                                    ],
-                                    type: 'columns',
-                                    input: false,
-                                    tableView: false
-                                }
+                            timeLog: {
+                                title: 'Time Log', key: 'timeLog', icon: 'clock-o',
+                                schema: { label: 'Start Time', type: 'datetime', key: 'startTime', enableTime: true }
                             },
-                            lineitems: {
-                                title: 'Line Items (Tech Work)',
-                                key: 'lineItems',
-                                icon: 'table',
+                            lineItems: {
+                                title: 'Line Items Grid', key: 'lineItems', icon: 'list',
                                 schema: {
-                                    label: 'Service Details',
-                                    key: 'lineItems',
-                                    type: 'datagrid',
-                                    input: true,
-                                    tableView: true,
+                                    label: 'Work Done', type: 'datagrid', key: 'lineItems',
                                     components: [
-                                        {
-                                            label: 'Who was helped',
-                                            key: 'whoHelped',
-                                            type: 'textfield',
-                                            input: true,
-                                            tableView: true
-                                        },
-                                        {
-                                            label: 'Hardware Used',
-                                            key: 'hardwareUsed',
-                                            type: 'textfield',
-                                            input: true,
-                                            tableView: true
-                                        },
-                                        {
-                                            label: 'Quantity',
-                                            key: 'quantity',
-                                            type: 'number',
-                                            input: true,
-                                            tableView: true,
-                                            defaultValue: 1
-                                        }
+                                        {label: 'Who was helped', key: 'whoHelped', type: 'textfield', input: true},
+                                        {label: 'Hardware Used', key: 'hardware', type: 'textfield', input: true},
+                                        {label: 'Qty', key: 'qty', type: 'number', input: true}
                                     ]
                                 }
                             },
                             signatures: {
-                                title: 'Signatures',
-                                key: 'signatures',
-                                icon: 'pencil-alt',
-                                schema: {
-                                    label: 'Signatures',
-                                    columns: [
-                                        {
-                                            components: [
-                                                {
-                                                    label: 'Technician Signature',
-                                                    key: 'technicianSignature',
-                                                    type: 'signature',
-                                                    input: true,
-                                                    tableView: true,
-                                                    footer: 'Signed by Technician'
-                                                }
-                                            ],
-                                            width: 6,
-                                            offset: 0,
-                                            push: 0,
-                                            pull: 0
-                                        },
-                                        {
-                                            components: [
-                                                {
-                                                    label: 'Client Signature',
-                                                    key: 'clientSignature',
-                                                    type: 'signature',
-                                                    input: true,
-                                                    tableView: true,
-                                                    footer: 'Signed by Client'
-                                                }
-                                            ],
-                                            width: 6,
-                                            offset: 0,
-                                            push: 0,
-                                            pull: 0
-                                        }
-                                    ],
-                                    type: 'columns',
-                                    input: false,
-                                    tableView: false
-                                }
-                            },
-                            watermark: {
-                                title: 'Watermark Background',
-                                key: 'watermark',
-                                icon: 'image',
-                                schema: {
-                                    label: 'Watermark',
-                                    tag: 'div',
-                                    className: 'watermark',
-                                    content: 'ServiceForge',
-                                    type: 'htmlelement',
-                                    input: false,
-                                    persistent: false
-                                }
+                                title: 'Signature Pad', key: 'signatures', icon: 'pencil',
+                                schema: { label: 'Signature', type: 'signature', key: 'signatureBox', hideLabel: false }
                             }
                         }
                     }
                 }
             }).then(function(builder) {
                 document.getElementById('saveTemplate').addEventListener('click', function() {
-                    var schema = builder.schema;
-                    console.log('Template Schema:', schema);
-
-                    var name = document.getElementById('name').value;
-                    if (!name) {
-                        alert('Please enter a template name.');
-                        return;
-                    }
-
-                    document.getElementById('layout_schema').value = JSON.stringify(schema);
+                    document.getElementById('layout_schema').value = JSON.stringify(builder.schema);
                     document.getElementById('templateForm').submit();
                 });
             });

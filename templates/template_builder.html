@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Jobcard Template Builder - ServiceForge Pro{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="https://cdn.form.io/formiojs/formio.full.min.css">
+    <script src="https://cdn.form.io/formiojs/formio.full.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="max-w-7xl mx-auto">
+        <div class="mb-8 flex justify-between items-center">
+            <div>
+                <h2 class="text-3xl font-bold text-gray-800">Jobcard Template Builder</h2>
+                <p class="text-gray-500 mt-1">Design your jobcard layout using the drag-and-drop editor.</p>
+            </div>
+            <div>
+                <a href="{% url 'dashboard' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg mr-3 transition-colors duration-200">
+                    Cancel
+                </a>
+                <button type="button" id="saveTemplate" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-sm transition-colors duration-200">
+                    <i class="fas fa-save mr-2"></i> Save Template
+                </button>
+            </div>
+        </div>
+
+        <form method="POST" id="templateForm" class="space-y-6" action="{% url 'template_builder' %}">
+            {% csrf_token %}
+            <input type="hidden" name="layout_schema" id="layout_schema">
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Template Name</label>
+                <input type="text" name="name" id="name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. Standard Service Jobcard">
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div id="builder" class="h-[600px]"></div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        window.onload = function() {
+            Formio.builder(document.getElementById('builder'), {}, {
+                builder: {
+                    basic: false,
+                    advanced: false,
+                    data: false,
+                    premium: false,
+                    customBasic: {
+                        title: 'Basic Fields',
+                        default: true,
+                        weight: 0,
+                        components: {
+                            textfield: true,
+                            textarea: true,
+                            number: true,
+                            checkbox: true,
+                            select: true,
+                            datetime: true,
+                            signature: true
+                        }
+                    },
+                    layout: {
+                        components: {
+                            columns: true,
+                            fieldset: true,
+                            panel: true,
+                            table: true,
+                            tabs: true,
+                            well: true,
+                            content: true
+                        }
+                    }
+                }
+            }).then(function(builder) {
+                document.getElementById('saveTemplate').addEventListener('click', function() {
+                    var schema = builder.schema;
+                    console.log('Template Schema:', schema);
+
+                    var name = document.getElementById('name').value;
+                    if (!name) {
+                        alert('Please enter a template name.');
+                        return;
+                    }
+
+                    document.getElementById('layout_schema').value = JSON.stringify(schema);
+                    document.getElementById('templateForm').submit();
+                });
+            });
+        };
+    </script>
+{% endblock %}

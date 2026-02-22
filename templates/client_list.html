@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Clients - ServiceForge Pro{% endblock %}
+
+{% block content %}
+    <div class="mb-8 flex justify-between items-center">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-800">Client Profiles</h2>
+            <p class="text-gray-500 mt-1">Manage your client database.</p>
+        </div>
+        <a href="{% url 'client_create' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-sm transition-colors duration-200 flex items-center">
+            <i class="fas fa-plus mr-2"></i> Add New Client
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-600 text-sm uppercase tracking-wider">
+                        <th class="px-6 py-4 font-semibold">Client Name</th>
+                        <th class="px-6 py-4 font-semibold">Email</th>
+                        <th class="px-6 py-4 font-semibold">Contact Person</th>
+                        <th class="px-6 py-4 font-semibold text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700 divide-y divide-gray-100">
+                    {% for client in clients %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 font-medium text-gray-900">{{ client.name }}</td>
+                        <td class="px-6 py-4 text-gray-600">{{ client.email }}</td>
+                        <td class="px-6 py-4 flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 mr-3 flex items-center justify-center text-xs font-bold text-blue-600">
+                                {{ client.contact_person|slice:":1"|default:"?"|upper }}
+                            </div>
+                            {{ client.contact_person|default:"-" }}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{% url 'client_edit' client.pk %}" class="text-blue-500 hover:text-blue-700 mr-3 font-medium">Edit</a>
+                            <form action="{% url 'client_delete' client.pk %}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this client?');">
+                                {% csrf_token %}
+                                <button type="submit" class="text-red-500 hover:text-red-700 font-medium">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-gray-400">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-users text-4xl mb-4 text-gray-300"></i>
+                                <p class="text-lg">No clients found.</p>
+                                <p class="text-sm">Get started by adding a new client profile.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
